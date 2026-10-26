@@ -47,7 +47,7 @@
 //   也就没有可被误关的东西。
 //
 // 代价与对策：GUI 子系统下没有控制台，printf 一类仍可用但要自己处理句柄。
-//   实测（MinGW-w64 + -static，见 README 8.6）：
+//   实测（MinGW-w64 + -static，见 docs/notes.md 5.6）：
 //     - wmain(int, wchar_t**) 在 GUI 子系统下依然是有效入口，不需要改 WinMain；
 //     - 从 bash/cmd 启动时，继承来的 stdout 句柄在 CRT 里是好的，
 //       GetStdHandle(STD_OUTPUT_HANDLE) 能拿到有效 HANDLE；

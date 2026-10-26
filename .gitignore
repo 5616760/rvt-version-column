@@ -11,8 +11,8 @@ src/RevitVersion.Native/out/
 *.exp
 *.lib
 
-# 保留交付用安装器（单文件安装包，源码见 src/RevitVersion.Native）
-!/RvtVersionSetup.exe
+# 说明：仓库只存源码与文档，不存任何编译产物。
+# 安装包请从 GitHub Releases 下载。
 
 # ---- .NET ----
 *.user

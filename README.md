@@ -16,14 +16,16 @@ BatchPrintInitial.rvt                  2008            20080126_1900          -
 
 ---
 
-## 一、安装（一条命令）
+## 一、安装
 
-**双击 `RvtVersionSetup.exe`**，UAC 点「是」，装完即可用。
+**从 [Releases](https://github.com/5616760/rvt-version-column/releases/latest) 下载 `RvtVersionSetup.exe`**（或整个 `RVT-V-v1.2.1.zip`），双击，UAC 点「是」，装完即可用。
 
 单文件 1.3 MB，DLL / propdesc / 注册工具 / 列监视器全部内嵌，不需要解压、不需要 .NET、不需要联网。
 
 装完直接打开任意含 `.rvt` 的文件夹 → 切到「详细信息」→ **列会自动出现，不用勾选**。
 不含 Revit 文件的文件夹不会多出空列。
+
+> 仓库里不存放编译产物，只有源码。要从源码构建见 [四、构建](#四构建)。
 
 卸载：设置 → 应用 → 找「RVT-V · 资源管理器 Revit 版本列」→ 卸载。
 或直接跑 `C:\Program Files\RvtVersion\RvtVersionSetup.exe /uninstall`。
@@ -82,8 +84,6 @@ taskkill /IM rvtvwatch.exe /F   # 临时停掉
 
 ---
 
----
-
 ## 三、工程结构
 
 ```
@@ -103,7 +103,7 @@ src/
     HandlerTest.cpp                 进程内加载 DLL、枚举 8 个属性（不需注册即可测）
     RvtVersion.propdesc             属性描述 schema
     RvtVersionHandler.def           只导出 DllGetClassObject / DllCanUnloadNow
-    build.bat                       MinGW 构建（一次产出全部五个 exe/dll）
+    build.bat                       MinGW 构建（一次产出全部六个产物，含安装包）
 
   RevitVersion.Core/                netstandard2.0，零第三方依赖（CLI 复用）
     CompoundFileReader.cs           自研最小 OLE2 只读读取器
@@ -139,8 +139,6 @@ src/
 
 ---
 
----
-
 ## 四、构建
 
 需要 MinGW-w64（g++）。设 `MINGW_ROOT` 指向其根目录，或把 `g++` 放进 PATH。
@@ -151,7 +149,13 @@ set MINGW_ROOT=C://mingw64
 build.bat
 ```
 
-产物在 `out\`：`RvtVersionHandler.dll`、`rvtvwatch.exe`、`rvtvdiag.exe`、`rvtvpropschema.exe`、`RvtVersionSetup.exe`。
+产物在 `out\`：`RvtVersionHandler.dll`、`rvtvwatch.exe`、`rvtvdiag.exe`、`rvtvpropschema.exe`、`rvtvhandlertest.exe`、`RvtVersionSetup.exe`。
+
+`rvtvhandlertest.exe` 不参与安装，只用于不注册 DLL 就验证解析逻辑：
+
+```bat
+out\rvtvhandlertest.exe "D:\some\folder\some.rvt"
+```
 
 .NET 部分（`RevitVersion.Core` / `RevitVersion.Cli`）单独构建：
 
@@ -166,11 +170,14 @@ dotnet build src\RevitVersion.Cli  -c Release
 
 ## 五、排障
 
-**先跑这一条**，13 项检查会直接告诉你哪一环断了：
+检查注册是否完整（DLL 装好后，用安装器自带的注册检查）：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File check-install.ps1 -ProbeDir "D:\some\rvt\folder"
+& 'C:\Program Files\RvtVersion\rvtvdiag.exe' --check
 ```
+
+13 项：文件 / CLSID / InprocServer32 默认值 / 4 个扩展名挂载 / schema 注册 /
+属性系统实际可读数 / 真实文件解析。全部 `PASS` 即为完全就绪。
 
 ### 列头菜单里找不到「Revit Version」
 
@@ -188,7 +195,8 @@ Get-ChildItem $b | ForEach-Object {
 ```
 
 - A 有路径、B 是 `0 / 8` → **propdesc 结构错了**。根节点必须是 `<schema schemaVersion="1.0">`，
-  见 7.3。改完必须彻底删掉 `PropertySchema\*` 里那一条再重新注册（见 7.4）。
+  见 [notes 4.3](docs/notes.md#43-propdesc-根节点必须是-schema)。改完必须彻底删掉
+  `PropertySchema\*` 里那一条再重新注册（见 [notes 4.4](docs/notes.md#44-已注册的-schema-不会自动更新)）。
 - A 没有路径 → `PSRegisterPropertySchema` 失败，看 `%TEMP%\RvtVersionSetup.log`。
 
 ### 列出现了，但全是空白
@@ -250,16 +258,17 @@ $k=[Microsoft.Win32.Registry]::LocalMachine.OpenSubKey('SOFTWARE\Classes\CLSID\{
 "default = [" + $k.GetValue('') + "]"
 "names   = " + ($k.GetValueNames() -join ' | ')
 
-# 2. 绕过 Shell，直接测解析
-& 'C:\Program Files\RvtVersion\RvtVersionSetup.exe' /extract "$env:TEMP\rvtvchk" | Out-Null
-& "$env:TEMP\rvtvchk\rvtvhandlertest.exe" "D:\some\folder"
+# 2. 绕过 Shell 的注册配置，直接问 PropertySystem 要值
+& 'C:\Program Files\RvtVersion\rvtvdiag.exe' --store "D:\some\folder\some.rvt"
 ```
 
 - 1 的 `default` 为空，或 `names` 里出现 `(default)` 这个**值名**
   → 用了 `Set-ItemProperty -Name '(default)'` 写默认值（那是错的，会创建普通值）。
   重装即可修正。
 - 2 有值、1 正常、`--check` 两行都 4/4，列仍空白 → 重启资源管理器（属性缓存）。
-- 2 也全是 `props=0` → 解析层问题，看 7.3 / 7.4。
+- 2 也全是 `props=0` → 解析层问题，见
+  [notes 4.3](docs/notes.md#43-propdesc-根节点必须是-schema) /
+  [notes 4.4](docs/notes.md#44-已注册的-schema-不会自动更新)。
 
 
 ### 安装程序报「提权失败或被取消」
@@ -337,14 +346,6 @@ Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIco
 ```
 
 安装每一步都有记录，含 `PSRegisterPropertySchema` 的原始 HRESULT。
-
-
-### 悬停提示不显示
-
-`InfoTip` 已写入 `HKLM\SOFTWARE\Classes\SystemFileAssociations\.rvt`，
-但 Windows 只在「详细信息」以外的某些视图显示。若被系统策略关闭则不生效。
-
----
 
 ---
 

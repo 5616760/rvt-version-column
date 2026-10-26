@@ -21,8 +21,6 @@
 
 ---
 
----
-
 ## 二、技术原理
 
 ### 2.1 版本信息存在哪
@@ -84,8 +82,6 @@
 
 ---
 
----
-
 ## 三、编译与内部实现
 
 ### 3.1 编译
@@ -99,23 +95,31 @@ cd src\RevitVersion.Native
 build.bat
 ```
 
-产物（`out\`，安装程序会自动复制一份到项目根目录）：
+产物（`out\`）：
 
 | 文件 | 大小 | 用途 |
 |---|---|---|
-| `RvtVersionHandler.dll` | 242,176 B | 属性处理器（x64） |
-| `rvtvhandlertest.exe` | 268,800 B | 不注册就能测的验证工具 |
+| `RvtVersionHandler.dll` | 269,312 B | 属性处理器（x64） |
+| `RvtVersion.propdesc` | 5,398 B | 属性描述 schema |
 | `rvtvpropschema.exe` | 253,440 B | 注册 / 注销 / 验证 propdesc |
-| `RvtVersionSetup.exe` | 776,192 B | 单文件安装程序（内嵌上面三个） |
+| `rvtvdiag.exe` | 302,592 B | 诊断工具（`--check` / `--store` / `--view-cols` 等） |
+| `rvtvwatch.exe` | 236,544 B | 列监视器（GUI 子系统，无窗口） |
+| `RvtVersionSetup.exe` | 1,355,264 B | 单文件安装程序（内嵌上面五个） |
 
 DLL 只依赖 UCRT（Win10+ 自带），静态链接 libstdc++ / libgcc。
+
+构建还会产出 `rvtvhandlertest.exe`（进程内加载 DLL、枚举 8 个属性，不需要注册）。
+它**不是**安装载荷，只用于开发期验证解析逻辑，所以不随安装包分发。
+
+**产物不入库**（`.gitignore` 里忽略 `out/`、`*.exe`、`*.dll`），由 `build.bat` 重建；
+安装包通过 GitHub Releases 分发。
 
 ### 3.2 安装程序做了什么
 
 `RvtVersionSetup.exe` 是原生 C++ 程序，不是脚本包装：
 
 1. 停掉 `explorer.exe` 释放 DLL 占用
-2. 建 `%ProgramFiles%\RvtVersion`，从自身 RCDATA 释放 3 个载荷
+2. 建 `%ProgramFiles%\RvtVersion`，从自身 RCDATA 释放 5 个载荷
 3. 设目录 DACL（`BU` 读执行 / `SY` `BA` 全控），保证普通用户能加载 DLL
 4. 写 CLSID + InprocServer32 **默认值**（`RegSetValueEx(name=nullptr)`）
 5. **清理旧注册**：`PurgeOldSchemas` 扫 `PropertySchema\*`，删掉指向本 propdesc 的条目，
@@ -150,7 +154,8 @@ DLL 只依赖 UCRT（Win10+ 自带），静态链接 libstdc++ / libgcc。
 ### 3.4 验证
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File check-install.ps1 -ProbeDir "D:\some\rvt\folder"
+& 'C:\Program Files\RvtVersion\rvtvdiag.exe' --check
+& 'C:\Program Files\RvtVersion\rvtvdiag.exe' --store "D:\some\folder\a.rvt"
 ```
 
 13 项检查：文件 / CLSID / InprocServer32 默认值 / 4 个扩展名挂载 / schema 注册 /
@@ -307,14 +312,15 @@ rvtvdiag --bag-hashes    # 操作后逐个 Bag 检查 ColInfo 里有没有我们
 改用 `ShellExecuteExW`，进程父级落在 explorer 下，与安装器生命周期解耦。
 已验证：安装后进程稳定存活，内存约 9.4 MB。
 
-### 3.8 旧的脚本安装方式（保留，已不是主路径）
+### 3.8 关于脚本安装方式
 
-`install-handler.bat` / `install-handler.ps1` 仍可用，逻辑与 exe 一致。
-注意其中的 `Set-RegDefault` ——**写注册表默认值必须用 `Set-Item -Value`**，
+早期还有两个 PowerShell 脚本安装方式（`install-handler.bat` / `install-handler.ps1`），
+逻辑与安装器 exe 一致，已**全部从仓库移除** —— 维护两套安装路径只会让状态不一致。
+需要时按 3.2 节的步骤手工注册即可。
+
+其中有一条深坑值得保留记录：**写注册表默认值必须用 `Set-Item -Value`**，
 用 `Set-ItemProperty -Name '(default)'` 会创建一个名叫 `(default)` 的普通值，
 真正的默认值仍为空，导致 DLL 加载不到、列永远空白。这是本项目踩过的最深的坑。
-
----
 
 ---
 
@@ -480,8 +486,6 @@ v1.2 的核心能力。三个层面分别验证。
 ```
 
 产物 `rvtvwatch.exe` 236 KB，安装后进程稳定存活（PID 存活 ≥ 4s，内存 9.4 MB）。
-
----
 
 ---
 
