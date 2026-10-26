@@ -1,0 +1,30 @@
+# 二进制文件：不做任何转换（必须放最前，优先级最高）
+*.exe        binary
+*.dll        binary
+*.png        binary
+*.res        binary
+*.propdesc   binary
+
+# 默认：自动检测，入库统一 LF
+* text=auto eol=lf
+
+# ---- Windows 脚本：必须 CRLF ----
+# build.bat / install-handler.bat 的注释里明确写了这个约束：
+# CRLF 且无 BOM，否则 cmd 认不出 @echo off。
+*.bat        text eol=crlf
+*.cmd        text eol=crlf
+*.ps1        text eol=crlf
+
+# ---- C/C++ 与 C#：CRLF 便于 Windows 下用 VS 打开 ----
+*.cs         text eol=crlf
+*.cpp        text eol=crlf
+*.h          text eol=crlf
+*.rc         text eol=crlf
+*.def        text eol=crlf
+*.manifest   text eol=crlf
+*.csproj     text eol=crlf
+
+# ---- 文档与脚本：LF ----
+*.md         text eol=lf
+*.py         text eol=lf
+*.json       text eol=lf

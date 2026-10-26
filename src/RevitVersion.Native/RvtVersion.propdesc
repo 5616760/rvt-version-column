@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  RvtVersion 属性描述文件
+
+  作用：向 Windows 属性系统声明自定义属性，资源管理器「详细信息」视图
+        才能在右键列头菜单里提供这些列。
+
+  注册方式（需管理员）：PSRegisterPropertySchema
+  文件位置要求：必须留在注册时的路径，且所有用户可读。
+                系统只记录路径，不缓存内容，删文件会导致属性消失。
+
+  FMTID 必须与 src/RevitVersion.Native/PropKeys.h 完全一致。
+
+  结构要点（踩过坑）：
+    1. 根节点必须是 <schema schemaVersion="1.0">，propertyDescriptionList 嵌在里面。
+       直接拿 propertyDescriptionList 当根节点，PSRegisterPropertySchema 会返回成功，
+       但属性一条都读不出来（GetPropertyDescription 全部 hr=0x8002802B）。
+    2. typeInfo 要带 isViewable / isQueryable，否则列头菜单里看不到。
+    3. searchInfo 不要写 columnIndexType="OnDisk"（那是给系统内置属性用的）。
+-->
+<schema xmlns="http://schemas.microsoft.com/windows/2006/propertydescription"
+        schemaVersion="1.0">
+  <propertyDescriptionList publisher="RvtVersion" product="RvtVersion">
+
+    <propertyDescription name="RvtVersion.FormatVersion"
+                         formatID="{AE96A02E-F8A8-4063-80CD-E90FDF050B70}"
+                         propID="2">
+      <searchInfo inInvertedIndex="false" isColumn="true"/>
+      <labelInfo label="Revit Format"/>
+      <typeInfo type="UInt32" isInnate="false" isViewable="true" isQueryable="true"
+                groupRange="0-4294967295" searchRawValue="true"/>
+      <displayInfo defaultColumnWidth="10" displayType="Number" alignment="Right"/>
+    </propertyDescription>
+
+    <propertyDescription name="RvtVersion.ProductYear"
+                         formatID="{AE96A02E-F8A8-4063-80CD-E90FDF050B70}"
+                         propID="3">
+      <searchInfo inInvertedIndex="true" isColumn="true"/>
+      <labelInfo label="Revit Version"/>
+      <typeInfo type="String" isInnate="false" isViewable="true" isQueryable="true"
+                searchRawValue="true"/>
+      <displayInfo defaultColumnWidth="14" displayType="String" alignment="Left"/>
+    </propertyDescription>
+
+    <propertyDescription name="RvtVersion.YearShort"
+                         formatID="{AE96A02E-F8A8-4063-80CD-E90FDF050B70}"
+                         propID="4">
+      <searchInfo inInvertedIndex="true" isColumn="true"/>
+      <labelInfo label="Revit Year"/>
+      <typeInfo type="String" isInnate="false" isViewable="true" isQueryable="true"
+                searchRawValue="true"/>
+      <displayInfo defaultColumnWidth="10" displayType="String" alignment="Left"/>
+    </propertyDescription>
+
+    <propertyDescription name="RvtVersion.Build"
+                         formatID="{AE96A02E-F8A8-4063-80CD-E90FDF050B70}"
+                         propID="5">
+      <searchInfo inInvertedIndex="true" isColumn="true"/>
+      <labelInfo label="Revit Build"/>
+      <typeInfo type="String" isInnate="false" isViewable="true" isQueryable="true"
+                searchRawValue="true"/>
+      <displayInfo defaultColumnWidth="22" displayType="String" alignment="Left"/>
+    </propertyDescription>
+
+    <propertyDescription name="RvtVersion.Locale"
+                         formatID="{AE96A02E-F8A8-4063-80CD-E90FDF050B70}"
+                         propID="6">
+      <searchInfo inInvertedIndex="true" isColumn="true"/>
+      <labelInfo label="Revit Locale"/>
+      <typeInfo type="String" isInnate="false" isViewable="true" isQueryable="true"
+                searchRawValue="true"/>
+      <displayInfo defaultColumnWidth="12" displayType="String" alignment="Left"/>
+    </propertyDescription>
+
+    <propertyDescription name="RvtVersion.Worksharing"
+                         formatID="{AE96A02E-F8A8-4063-80CD-E90FDF050B70}"
+                         propID="7">
+      <searchInfo inInvertedIndex="true" isColumn="true"/>
+      <labelInfo label="Revit Worksharing"/>
+      <typeInfo type="String" isInnate="false" isViewable="true" isQueryable="true"
+                searchRawValue="true"/>
+      <displayInfo defaultColumnWidth="14" displayType="String" alignment="Left"/>
+    </propertyDescription>
+
+    <!-- 以下两个不进列，只用于预览窗格 / 悬停提示 -->
+    <propertyDescription name="RvtVersion.SavedPath"
+                         formatID="{AE96A02E-F8A8-4063-80CD-E90FDF050B70}"
+                         propID="8">
+      <searchInfo inInvertedIndex="true" isColumn="false"/>
+      <labelInfo label="Revit Saved Path"/>
+      <typeInfo type="String" isInnate="false" isViewable="true" isQueryable="false"
+                searchRawValue="true"/>
+      <displayInfo defaultColumnWidth="40" displayType="String" alignment="Left"/>
+    </propertyDescription>
+
+    <propertyDescription name="RvtVersion.Size"
+                         formatID="{AE96A02E-F8A8-4063-80CD-E90FDF050B70}"
+                         propID="9">
+      <searchInfo inInvertedIndex="false" isColumn="false"/>
+      <labelInfo label="Revit Size"/>
+      <typeInfo type="UInt64" isInnate="false" isViewable="false" isQueryable="false"
+                groupRange="0-18446744073709551615" searchRawValue="true"/>
+      <displayInfo defaultColumnWidth="12" displayType="Number" alignment="Right"/>
+    </propertyDescription>
+
+  </propertyDescriptionList>
+</schema>

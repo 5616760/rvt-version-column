@@ -1,0 +1,42 @@
+# ---- 编译产物 ----
+src/**/bin/
+src/**/obj/
+src/RevitVersion.Native/out/
+*.exe
+*.dll
+*.pdb
+*.res
+*.obj
+*.ilk
+*.exp
+*.lib
+
+# 保留交付用安装器（单文件安装包，源码见 src/RevitVersion.Native）
+!/RvtVersionSetup.exe
+
+# ---- .NET ----
+*.user
+*.suo
+.vs/
+project.lock.json
+
+# ---- Python ----
+__pycache__/
+*.pyc
+.venv/
+
+# ---- 编辑器 ----
+.vscode/
+.idea/
+
+# ---- 本地临时文件 ----
+*.log
+*.bak
+*.bak-*
+*.tmp
+Thumbs.db
+desktop.ini
+~$*
+
+# ---- 工作笔记（本地保留，不发布）----
+.workbuddy/

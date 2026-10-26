@@ -1,0 +1,5 @@
+LIBRARY RvtVersionHandler
+
+EXPORTS
+    DllGetClassObject   PRIVATE
+    DllCanUnloadNow     PRIVATE

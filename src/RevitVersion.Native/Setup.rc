@@ -1,0 +1,56 @@
+// =====================================================================
+// 安装程序设计资源
+//
+// 注意：本文件必须为 CRLF + 无 BOM，否则 windres 可能报语法错误。
+//
+// 三个 RCDATA 是安装载荷，由 Setup.cpp 在运行时释放：
+//   101 RvtVersionHandler.dll    属性处理器
+//   102 RvtVersion.propdesc      属性描述 schema
+//   103 rvtvpropschema.exe       schema 注册/校验工具
+//   104 rvtvdiag.exe             注册诊断 / 列布局工具
+//   105 rvtvwatch.exe            列监视器（按文件夹内容自动显示列）
+//
+// RC 路径解析：windres 以本文件所在目录为基准（配合 -I 参数）。
+// =====================================================================
+
+#include <winver.h>
+
+// ---- 版本信息 ----
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     1,2,0,0
+PRODUCTVERSION  1,2,0,0
+FILEFLAGSMASK   0x3fL
+FILEFLAGS       0x0L
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_APP
+FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404B0"
+        BEGIN
+            VALUE "CompanyName",      "RVT-V"
+            VALUE "FileDescription",  "RVT-V Revit Version Column Installer"
+            VALUE "FileVersion",      "1.2.1.0"
+            VALUE "InternalName",     "RvtVersionSetup"
+            VALUE "LegalCopyright",   ""
+            VALUE "OriginalFilename", "RvtVersionSetup.exe"
+            VALUE "ProductName",      "RVT-V Revit Version Column"
+            VALUE "ProductVersion",   "1.2.1.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
+
+// ---- 清单（必须和 exe 资源 ID 1 绑定，Windows 才认）----
+1 RT_MANIFEST "Setup.manifest"
+
+// ---- 安装载荷 ----
+101 RCDATA "out\\RvtVersionHandler.dll"
+102 RCDATA "out\\RvtVersion.propdesc"
+103 RCDATA "out\\rvtvpropschema.exe"
+104 RCDATA "out\\rvtvdiag.exe"
+105 RCDATA "out\\rvtvwatch.exe"
